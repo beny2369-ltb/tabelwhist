@@ -10,7 +10,6 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0f172a">
     <style>
-        /* Blochează efectul de tragere în jos (pull-to-refresh) și elasticitatea paginii */
         body {
             overscroll-behavior-y: contain;
             touch-action: pan-x pan-y;
@@ -21,34 +20,53 @@
 
     <header class="text-center py-3 border-b border-slate-800 mb-4">
         <h1 class="text-xl font-bold tracking-wide flex items-center justify-center gap-2">
-            <span>🃏</span> Whist Scoreboard
+            <span>🃏</span> Whist Românesc
         </h1>
-        <p class="text-xs text-slate-400">Scoruri & Licitări</p>
+        <p class="text-xs text-slate-400">Tabel de Scor & Licitări</p>
     </header>
 
     <main class="max-w-md w-full mx-auto flex-1 space-y-4">
-        <!-- Secțiune setare jucători (dacă jocul nu a început) -->
-        <div id="setupSection" class="bg-slate-800 border border-slate-700 p-4 rounded-2xl shadow-lg space-y-3">
-            <h2 class="text-sm font-semibold text-indigo-400">Jucători Activi</h2>
-            <div class="flex gap-2">
-                <input id="playerNameInput" type="text" placeholder="Nume jucător..." class="flex-1 px-3 py-2 text-sm bg-slate-900 border border-slate-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-                <button onclick="addPlayer()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl transition">Adaugă</button>
+        
+        <!-- SECȚIUNEA 1: SETUP JUCĂTORI ȘI TIP JOC -->
+        <div id="setupSection" class="bg-slate-800 border border-slate-700 p-4 rounded-2xl shadow-lg space-y-4">
+            <div>
+                <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Jucători Activi</h2>
+                <div class="flex gap-2">
+                    <input id="playerNameInput" type="text" placeholder="Nume jucător..." class="flex-1 px-3 py-2 text-sm bg-slate-900 border border-slate-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                    <button onclick="addPlayer()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl transition">Adaugă</button>
+                </div>
+                <div id="playersList" class="flex flex-wrap gap-2 pt-3"></div>
             </div>
-            <div id="playersList" class="flex flex-wrap gap-2 pt-2"></div>
-            <button onclick="startMatch()" class="w-full mt-3 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl transition shadow">
+
+            <!-- Selectare variantă joc (1-8-1, 8-1-8 etc.) -->
+            <div class="space-y-2 pt-2 border-t border-slate-700">
+                <label class="text-xs font-bold uppercase tracking-wider text-slate-400">Tip / Structură Meci:</label>
+                <select id="gameTypeSelect" class="w-full px-3 py-2 text-xs bg-slate-900 border border-slate-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <option value="1-8-1">1 - 8 - 1 (Crescător, Maxim, Descrescător)</option>
+                    <option value="8-1-8">8 - 1 - 8 (Descrescător, Minim, Crescător)</option>
+                    <option value="1-min-8">1 - 7 (Doar crescător fără 8)</option>
+                </select>
+            </div>
+
+            <button onclick="startMatch()" class="w-full mt-2 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl transition shadow">
                 Începe Jocul 🚀
             </button>
         </div>
 
-        <!-- Secțiune Tabela de Scor (activă în timpul jocului) -->
+        <!-- SECȚIUNEA 2: TABELA DE JOC -->
         <div id="gameSection" class="hidden space-y-4">
-            <div class="bg-slate-800 border border-slate-700 p-4 rounded-2xl shadow-lg">
-                <div class="flex justify-between items-center mb-3">
-                    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400">Tabel Clasament</h2>
+            <div class="bg-slate-800 border border-slate-700 p-4 rounded-2xl shadow-lg space-y-3">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h2 class="text-xs font-bold uppercase tracking-wider text-indigo-400">Meci în desfășurare</h2>
+                        <p id="currentRoundInfo" class="text-xs text-slate-300 font-semibold"></p>
+                    </div>
                     <button onclick="resetMatch()" class="text-[10px] text-rose-400 hover:underline">Resetează Meciul</button>
                 </div>
+
+                <!-- Tabel scoruri -->
                 <div id="scoreboardContainer" class="overflow-x-auto">
-                    <!-- Aici se generează dinamic tabelul de scor -->
+                    <!-- Generat dinamic -->
                 </div>
             </div>
         </div>
@@ -59,13 +77,17 @@
     </footer>
 
     <script>
-        // Logică simplă de stocare locală și gestionare scoruri Whist
         let players = JSON.parse(localStorage.getItem('whist_players')) || [];
-        let scores = JSON.parse(localStorage.getItem('whist_scores')) || {};
+        let gameConfig = localStorage.getItem('whist_config') || '1-8-1';
+        let matchStarted = localStorage.getItem('whist_started') === 'true';
 
         function renderSetup() {
             const list = document.getElementById('playersList');
             list.innerHTML = '';
+            if(players.length === 0) {
+                list.innerHTML = `<span class="text-xs text-slate-500 italic">Niciun jucător adăugat încă.</span>`;
+                return;
+            }
             players.forEach((p, index) => {
                 const tag = document.createElement('div');
                 tag.className = "flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-xl text-xs";
@@ -96,15 +118,21 @@
                 alert("Ai nevoie de cel puțin 3 jucători pentru Whist!");
                 return;
             }
+            gameConfig = document.getElementById('gameTypeSelect').value;
+            localStorage.setItem('whist_config', gameConfig);
+            localStorage.setItem('whist_started', 'true');
+            
             document.getElementById('setupSection').classList.add('hidden');
             document.getElementById('gameSection').classList.remove('hidden');
-            renderScoreboard();
+            initGameData();
         }
 
-        function renderScoreboard() {
+        function initGameData() {
+            document.getElementById('currentRoundInfo').textContent = `Mod: ${gameConfig}`;
             const container = document.getElementById('scoreboardContainer');
-            // Construire tabel minimal de afișare
-            let html = `<table class="w-full text-left text-xs"><thead><tr class="border-b border-slate-700 text-slate-400"><th class="py-2">Jucător</th><th class="py-2 text-right">Puncte Totale</th></tr></thead><tbody>`;
+            
+            // Exemplu simplu de tabel de afișare a rundelor
+            let html = `<table class="w-full text-left text-xs"><thead><tr class="border-b border-slate-700 text-slate-400"><th class="py-2">Jucător</th><th class="py-2 text-right">Total Puncte</th></tr></thead><tbody>`;
             players.forEach(p => {
                 html += `<tr class="border-b border-slate-800"><td class="py-2.5 font-semibold">${p}</td><td class="py-2.5 text-right font-mono text-emerald-400 font-bold">0</td></tr>`;
             });
@@ -113,20 +141,26 @@
         }
 
         window.resetMatch = function() {
-            if(confirm("Sigur vrei să resetezi tot meciul?")) {
-                localStorage.removeItem('whist_players');
-                localStorage.removeItem('whist_scores');
+            if(confirm("Sigur vrei să resetezi tot meciul? Se vor șterge jucătorii și scorurile.")) {
+                localStorage.clear();
                 players = [];
-                location.reload();
+                document.getElementById('gameSection').classList.add('hidden');
+                document.getElementById('setupSection').classList.remove('hidden');
+                renderSetup();
             }
         }
 
-        // Înregistrare Service Worker pentru PWA
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js').catch(err => console.log('SW error:', err));
         }
 
         renderSetup();
+        if(matchStarted && players.length >= 3) {
+            document.getElementById('setupSection').classList.add('hidden');
+            document.getElementById('gameSection').classList.remove('hidden');
+            document.getElementById('gameTypeSelect').value = gameConfig;
+            initGameData();
+        }
     </script>
 </body>
 </html>
