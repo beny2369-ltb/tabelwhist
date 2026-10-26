@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Whist Scoreboard</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Legătură către Manifestul PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <style>
+        /* Blochează efectul de tragere în jos (pull-to-refresh) și elasticitatea paginii */
+        body {
+            overscroll-behavior-y: contain;
+            touch-action: pan-x pan-y;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col justify-between p-4 selection:bg-indigo-500">
+
+    <header class="text-center py-3 border-b border-slate-800 mb-4">
+        <h1 class="text-xl font-bold tracking-wide flex items-center justify-center gap-2">
+            <span>🃏</span> Whist Scoreboard
+        </h1>
+        <p class="text-xs text-slate-400">Scoruri & Licitări</p>
+    </header>
+
+    <main class="max-w-md w-full mx-auto flex-1 space-y-4">
+        <!-- Secțiune setare jucători (dacă jocul nu a început) -->
+        <div id="setupSection" class="bg-slate-800 border border-slate-700 p-4 rounded-2xl shadow-lg space-y-3">
+            <h2 class="text-sm font-semibold text-indigo-400">Jucători Activi</h2>
+            <div class="flex gap-2">
+                <input id="playerNameInput" type="text" placeholder="Nume jucător..." class="flex-1 px-3 py-2 text-sm bg-slate-900 border border-slate-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                <button onclick="addPlayer()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl transition">Adaugă</button>
+            </div>
+            <div id="playersList" class="flex flex-wrap gap-2 pt-2"></div>
+            <button onclick="startMatch()" class="w-full mt-3 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl transition shadow">
+                Începe Jocul 🚀
+            </button>
+        </div>
+
+        <!-- Secțiune Tabela de Scor (activă în timpul jocului) -->
+        <div id="gameSection" class="hidden space-y-4">
+            <div class="bg-slate-800 border border-slate-700 p-4 rounded-2xl shadow-lg">
+                <div class="flex justify-between items-center mb-3">
+                    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400">Tabel Clasament</h2>
+                    <button onclick="resetMatch()" class="text-[10px] text-rose-400 hover:underline">Resetează Meciul</button>
+                </div>
+                <div id="scoreboardContainer" class="overflow-x-auto">
+                    <!-- Aici se generează dinamic tabelul de scor -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="text-center py-3 text-[10px] text-slate-500 border-t border-slate-800 mt-4">
+        Whist App • Salvat local automat
+    </footer>
+
+    <script>
+        // Logică simplă de stocare locală și gestionare scoruri Whist
+        let players = JSON.parse(localStorage.getItem('whist_players')) || [];
+        let scores = JSON.parse(localStorage.getItem('whist_scores')) || {};
+
+        function renderSetup() {
+            const list = document.getElementById('playersList');
+            list.innerHTML = '';
+            players.forEach((p, index) => {
+                const tag = document.createElement('div');
+                tag.className = "flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-xl text-xs";
+                tag.innerHTML = `<span>${p}</span> <button onclick="removePlayer(${index})" class="text-rose-400 hover:text-rose-300 font-bold ml-1">×</button>`;
+                list.appendChild(tag);
+            });
+        }
+
+        window.addPlayer = function() {
+            const input = document.getElementById('playerNameInput');
+            const name = input.value.trim();
+            if(name && !players.includes(name)) {
+                players.push(name);
+                input.value = '';
+                localStorage.setItem('whist_players', JSON.stringify(players));
+                renderSetup();
+            }
+        }
+
+        window.removePlayer = function(index) {
+            players.splice(index, 1);
+            localStorage.setItem('whist_players', JSON.stringify(players));
+            renderSetup();
+        }
+
+        window.startMatch = function() {
+            if(players.length < 3) {
+                alert("Ai nevoie de cel puțin 3 jucători pentru Whist!");
+                return;
+            }
+            document.getElementById('setupSection').classList.add('hidden');
+            document.getElementById('gameSection').classList.remove('hidden');
+            renderScoreboard();
+        }
+
+        function renderScoreboard() {
+            const container = document.getElementById('scoreboardContainer');
+            // Construire tabel minimal de afișare
+            let html = `<table class="w-full text-left text-xs"><thead><tr class="border-b border-slate-700 text-slate-400"><th class="py-2">Jucător</th><th class="py-2 text-right">Puncte Totale</th></tr></thead><tbody>`;
+            players.forEach(p => {
+                html += `<tr class="border-b border-slate-800"><td class="py-2.5 font-semibold">${p}</td><td class="py-2.5 text-right font-mono text-emerald-400 font-bold">0</td></tr>`;
+            });
+            html += `</tbody></table>`;
+            container.innerHTML = html;
+        }
+
+        window.resetMatch = function() {
+            if(confirm("Sigur vrei să resetezi tot meciul?")) {
+                localStorage.removeItem('whist_players');
+                localStorage.removeItem('whist_scores');
+                players = [];
+                location.reload();
+            }
+        }
+
+        // Înregistrare Service Worker pentru PWA
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').catch(err => console.log('SW error:', err));
+        }
+
+        renderSetup();
+    </script>
+</body>
+</html>
