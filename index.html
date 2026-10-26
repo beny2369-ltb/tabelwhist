@@ -1,160 +1,1801 @@
 <!DOCTYPE html>
-<html lang="ro">
+<html lang="ro" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Tabel Scor Whist Românesc</title>
+    <title>Whist Românesc - Tabel de Scor</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#14532d">
+    <!-- Google Fonts: Inter & Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Outfit', 'sans-serif'],
+                    },
+                    colors: {
+                        felt: {
+                            950: '#061a12',
+                            900: '#0b291e',
+                            800: '#113d2d',
+                            700: '#195640',
+                        },
+                        gold: {
+                            400: '#fbbf24',
+                            500: '#f59e0b',
+                            600: '#d97706',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <style>
         body {
-            overscroll-behavior-y: contain;
-            touch-action: pan-x pan-y;
+            background-color: #061a12;
+            background-image: radial-gradient(circle at 50% 0%, #113d2d 0%, #061a12 75%);
+            color: #f8fafc;
+            -webkit-tap-highlight-color: transparent;
+            min-height: 100dvh;
+        }
+        .font-display {
+            font-family: 'Outfit', sans-serif;
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #061a12;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #195640;
+            border-radius: 9999px;
+        }
+        /* Number button animations */
+        .num-btn {
+            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .num-btn:active:not(:disabled) {
+            transform: scale(0.92);
+        }
+        .glass-panel {
+            background: rgba(11, 41, 30, 0.78);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .table-sticky-col {
+            position: sticky;
+            left: 0;
+            z-index: 10;
+            background-color: #0b291e;
         }
     </style>
 </head>
-<body class="bg-emerald-950 text-emerald-50 min-h-screen flex flex-col justify-between p-4 selection:bg-emerald-600">
+<body class="antialiased selection:bg-amber-500 selection:text-slate-950 pb-24">
 
-    <!-- Header clasic pe verde -->
-    <header class="text-center py-3 border-b border-emerald-800 mb-4 bg-emerald-900/60 rounded-2xl shadow-md backdrop-blur">
-        <h1 class="text-xl font-bold tracking-wide flex items-center justify-center gap-2 text-emerald-200">
-            <span>🃏</span> Tabel Scor Whist
-        </h1>
-        <p class="text-xs text-emerald-400">Ediție Românească • Licitări & Palme</p>
+    <!-- Top App Bar -->
+    <header class="sticky top-0 z-30 glass-panel border-b border-emerald-800/60 px-4 py-3">
+        <div class="max-w-xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-slate-950 shadow-md shadow-amber-500/20">
+                    <i class="fa-solid fa-spade text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="font-display font-bold text-lg leading-tight tracking-tight text-white flex items-center gap-1.5">
+                        Whist Românesc
+                    </h1>
+                    <p id="headerSubtitle" class="text-xs text-emerald-300/80 font-medium">Configurare Joc Nou</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button id="btnUndoHeader" onclick="openUndoModal()" class="hidden px-2.5 py-1.5 rounded-lg bg-slate-800/90 hover:bg-slate-700 text-slate-200 text-xs font-medium border border-slate-600/50 flex items-center gap-1.5 transition" title="Anulează ultima rundă">
+                    <i class="fa-solid fa-rotate-left text-amber-400"></i>
+                    <span class="hidden sm:inline">Anulează Runda</span>
+                </button>
+                <button id="btnNewGameHeader" onclick="openResetModal()" class="hidden px-2.5 py-1.5 rounded-lg bg-rose-950/80 hover:bg-rose-900 text-rose-200 text-xs font-medium border border-rose-700/50 flex items-center gap-1.5 transition">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Joc Nou</span>
+                </button>
+            </div>
+        </div>
     </header>
 
-    <main class="max-w-md w-full mx-auto flex-1 space-y-4">
-        
-        <!-- Ecran de configurare jucători și mod joc -->
-        <div id="setupSection" class="bg-emerald-900/80 border border-emerald-700/60 p-4 rounded-2xl shadow-xl space-y-4 backdrop-blur">
-            <div>
-                <h2 class="text-xs font-bold uppercase tracking-wider text-emerald-300 mb-2">Jucători Activi</h2>
-                <div class="flex gap-2">
-                    <input id="playerNameInput" type="text" placeholder="Nume jucător..." class="flex-1 px-3 py-2 text-sm bg-emerald-950 border border-emerald-700 rounded-xl text-emerald-100 placeholder-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500" />
-                    <button onclick="addPlayer()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-xl transition shadow">Adaugă</button>
-                </div>
-                <div id="playersList" class="flex flex-wrap gap-2 pt-3"></div>
-            </div>
+    <!-- Main Content Container -->
+    <main class="max-w-xl mx-auto px-3.5 pt-4">
 
-            <div class="space-y-2 pt-2 border-t border-emerald-800">
-                <label class="text-xs font-bold uppercase tracking-wider text-emerald-300">Structură Joc:</label>
-                <select id="gameTypeSelect" class="w-full px-3 py-2 text-xs bg-emerald-950 border border-emerald-700 rounded-xl text-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                    <option value="1-8-1">1 - 8 - 1 (Crescător, Maxim, Descrescător)</option>
-                    <option value="8-1-8">8 - 1 - 8 (Descrescător, Minim, Crescător)</option>
-                </select>
-            </div>
-
-            <button onclick="startMatch()" class="w-full mt-2 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl transition shadow-lg">
-                Începe Meciul 🚀
-            </button>
-        </div>
-
-        <!-- Ecranul principal de joc / tabel -->
-        <div id="gameSection" class="hidden space-y-4">
-            <div class="bg-emerald-900/80 border border-emerald-700/60 p-4 rounded-2xl shadow-xl space-y-3 backdrop-blur">
-                <div class="flex justify-between items-center border-b border-emerald-800 pb-2">
-                    <div>
-                        <h2 class="text-xs font-bold uppercase tracking-wider text-emerald-200">Tabel de Scor</h2>
-                        <p id="currentRoundInfo" class="text-xs text-emerald-400 font-semibold"></p>
+        <!-- ==================== SCREEN 1: SETUP ==================== -->
+        <section id="setupScreen" class="space-y-5">
+            <div class="glass-panel rounded-2xl p-5 shadow-xl space-y-6">
+                <!-- Number of Players -->
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-emerald-300 mb-2.5">
+                        1. Număr de Jucători (4 - 6)
+                    </label>
+                    <div class="grid grid-cols-3 gap-2.5" id="playerCountSelector">
+                        <button type="button" onclick="setSetupPlayerCount(4)" data-count="4" class="setup-count-btn py-3 rounded-xl font-display font-bold text-base border transition flex flex-col items-center justify-center">
+                            <span>4 Jucători</span>
+                            <span class="text-[11px] font-sans font-normal opacity-75">24 runde</span>
+                        </button>
+                        <button type="button" onclick="setSetupPlayerCount(5)" data-count="5" class="setup-count-btn py-3 rounded-xl font-display font-bold text-base border transition flex flex-col items-center justify-center">
+                            <span>5 Jucători</span>
+                            <span class="text-[11px] font-sans font-normal opacity-75">27 runde</span>
+                        </button>
+                        <button type="button" onclick="setSetupPlayerCount(6)" data-count="6" class="setup-count-btn py-3 rounded-xl font-display font-bold text-base border transition flex flex-col items-center justify-center">
+                            <span>6 Jucători</span>
+                            <span class="text-[11px] font-sans font-normal opacity-75">30 runde</span>
+                        </button>
                     </div>
-                    <button onclick="resetMatch()" class="text-[10px] bg-rose-900/50 hover:bg-rose-900 text-rose-200 px-2.5 py-1 rounded-lg border border-rose-700/50 transition">Resetează Meciul</button>
                 </div>
 
-                <div id="scoreboardContainer" class="overflow-x-auto">
-                    <!-- Tabelul dinamic de scor -->
+                <!-- Game Variant -->
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-emerald-300 mb-2.5">
+                        2. Varianta de Joc
+                    </label>
+                    <div class="grid grid-cols-2 gap-2.5">
+                        <button type="button" onclick="setSetupVariant('1-8-1')" id="variantBtn181" class="py-3 px-3 rounded-xl font-display font-bold text-sm border transition flex flex-col items-center text-center">
+                            <span class="text-base">1 - 8 - 1 (Clasic)</span>
+                            <span class="text-[11px] font-sans font-normal opacity-80 mt-0.5">Începe și se termină cu 1 carte</span>
+                        </button>
+                        <button type="button" onclick="setSetupVariant('8-1-8')" id="variantBtn818" class="py-3 px-3 rounded-xl font-display font-bold text-sm border transition flex flex-col items-center text-center">
+                            <span class="text-base">8 - 1 - 8</span>
+                            <span class="text-[11px] font-sans font-normal opacity-80 mt-0.5">Începe și se termină cu 8 cărți</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Bonus 5 Consecutive Rule Toggle -->
+                <div class="bg-emerald-950/60 border border-emerald-800/60 rounded-xl p-3.5 flex items-center justify-between gap-3">
+                    <div>
+                        <div class="font-semibold text-sm text-white flex items-center gap-1.5">
+                            <i class="fa-solid fa-fire text-amber-400"></i>
+                            <span>Bonus / Penalizare 5 la rând</span>
+                        </div>
+                        <p class="text-xs text-emerald-200/70 mt-0.5">
+                            ±10 puncte pentru 5 predicții corecte sau greșite consecutive (în rundele de 2–8 cărți).
+                        </p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                        <input type="checkbox" id="streakBonusToggle" checked class="sr-only peer">
+                        <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+                    </label>
+                </div>
+
+                <!-- Player Names List -->
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="block text-xs font-bold uppercase tracking-wider text-emerald-300">
+                            3. Numele și Ordinea la Masă
+                        </label>
+                        <span class="text-[11px] text-amber-300/90 font-medium">
+                            <i class="fa-solid fa-arrows-up-down mr-1"></i>Ordinea licitației
+                        </span>
+                    </div>
+
+                    <div class="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 mb-3 text-xs text-amber-200 flex items-start gap-2.5">
+                        <i class="fa-solid fa-circle-info text-amber-400 mt-0.5 shrink-0"></i>
+                        <span>
+                            <strong>Primul jucător din listă</strong> începe licitația în Runda 1. La fiecare rundă următoare, primul la licitație se rotește automat în josul listei.
+                        </span>
+                    </div>
+
+                    <div id="playerInputsContainer" class="space-y-2.5">
+                        <!-- Dynamically populated inputs -->
+                    </div>
+                </div>
+
+                <!-- Start Button -->
+                <button type="button" onclick="startNewGame()" class="w-full py-4 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-display font-extrabold text-base shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 transition active:scale-[0.99]">
+                    <i class="fa-solid fa-play"></i>
+                    <span>ÎNCEPE JOCUL DE WHIST</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- ==================== SCREEN 2: ACTIVE GAME ==================== -->
+        <section id="gameScreen" class="hidden space-y-4">
+
+            <!-- TAB 1: RUNDA CURENTĂ -->
+            <div id="tabCurrentRound" class="space-y-4">
+
+                <!-- Round Info Banner -->
+                <div class="glass-panel rounded-2xl p-4 shadow-lg border border-emerald-700/50 relative overflow-hidden">
+                    <div class="flex items-center justify-between gap-2">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span id="roundBadgeText" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-800 text-emerald-200 border border-emerald-600/50">
+                                    Runda 1 / 24
+                                </span>
+                                <span id="trumpBadge" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                                    Cu ATU
+                                </span>
+                            </div>
+                            <h2 id="roundCardsTitle" class="font-display font-extrabold text-2xl sm:text-3xl text-white mt-1.5">
+                                1 Carte în mână
+                            </h2>
+                        </div>
+
+                        <!-- Cards visual badge -->
+                        <div class="w-14 h-16 rounded-xl bg-gradient-to-b from-white to-slate-200 text-slate-900 flex flex-col items-center justify-center shadow-md border-2 border-amber-400 shrink-0">
+                            <span id="roundCardBigNum" class="font-display font-extrabold text-2xl leading-none">1</span>
+                            <span class="text-[10px] font-bold uppercase tracking-tighter text-slate-600 mt-0.5">Cărți</span>
+                        </div>
+                    </div>
+
+                    <!-- First & Last bidder info pill -->
+                    <div class="mt-3 pt-3 border-t border-emerald-800/60 flex flex-wrap items-center justify-between gap-2 text-xs">
+                        <div class="flex items-center gap-1.5 text-emerald-200">
+                            <i class="fa-solid fa-bullhorn text-amber-400"></i>
+                            <span>Primul la licitație: <strong id="firstBidderName" class="text-white">—</strong></span>
+                        </div>
+                        <div class="flex items-center gap-1.5 text-rose-300">
+                            <i class="fa-solid fa-lock text-rose-400"></i>
+                            <span>Ultimul (restricție): <strong id="lastBidderName" class="text-white">—</strong></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Phase Stepper -->
+                <div class="grid grid-cols-2 gap-2 bg-emerald-950/90 p-1.5 rounded-xl border border-emerald-800/70">
+                    <div id="phaseStep1" class="py-2 px-3 rounded-lg text-center font-display font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition">
+                        <span class="w-5 h-5 rounded-full text-xs flex items-center justify-center font-extrabold bg-slate-900/40">1</span>
+                        <span>Licitare Mâini</span>
+                    </div>
+                    <div id="phaseStep2" class="py-2 px-3 rounded-lg text-center font-display font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition">
+                        <span class="w-5 h-5 rounded-full text-xs flex items-center justify-center font-extrabold bg-slate-900/40">2</span>
+                        <span>Mâini Făcute</span>
+                    </div>
+                </div>
+
+                <!-- Live Status Bar for Bidding / Tricks Sum -->
+                <div id="roundStatusBanner" class="rounded-xl p-3.5 border flex items-center justify-between gap-3 transition-all">
+                    <!-- Populated dynamically -->
+                </div>
+
+                <!-- Players Interactive Cards List (Bidding or Tricks) -->
+                <div id="playersRoundContainer" class="space-y-3">
+                    <!-- Populated dynamically in exact bidding order -->
+                </div>
+
+                <!-- Action Buttons Footer for Current Round -->
+                <div id="roundActionArea" class="pt-1 space-y-2.5">
+                    <!-- Populated dynamically -->
                 </div>
             </div>
-        </div>
+
+            <!-- TAB 2: CLASAMENT & TABEL -->
+            <div id="tabScoreboard" class="hidden space-y-5">
+
+                <!-- Live Standings Cards -->
+                <div class="glass-panel rounded-2xl p-4 shadow-lg">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="font-display font-bold text-base text-white flex items-center gap-2">
+                            <i class="fa-solid fa-trophy text-amber-400"></i>
+                            <span>Clasament Live</span>
+                        </h3>
+                        <span id="standingsProgressText" class="text-xs text-emerald-300/80 font-medium"></span>
+                    </div>
+                    <div id="liveStandingsList" class="space-y-2">
+                        <!-- Dynamically populated -->
+                    </div>
+                </div>
+
+                <!-- Traditional Multi-Column Whist Score Table -->
+                <div class="glass-panel rounded-2xl p-4 shadow-lg overflow-hidden">
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                        <div>
+                            <h3 class="font-display font-bold text-base text-white flex items-center gap-2">
+                                <i class="fa-solid fa-table-cells text-emerald-400"></i>
+                                <span>Tabel Tradițional de Whist</span>
+                            </h3>
+                            <p class="text-[11px] text-emerald-300/70">
+                                Format: <strong>Licitat / Făcut</strong> și <strong>Scor Total</strong>. Verde = mână făcută exact.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto -mx-4 px-4 pb-2">
+                        <table class="w-full text-left border-collapse min-w-[480px]" id="traditionalScoreTable">
+                            <!-- Dynamically populated -->
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: REGULI -->
+            <div id="tabRules" class="hidden space-y-4">
+                <div class="glass-panel rounded-2xl p-5 space-y-4 text-sm leading-relaxed text-slate-200">
+                    <div class="flex items-center gap-2.5 border-b border-emerald-800/70 pb-3">
+                        <i class="fa-solid fa-book-open text-amber-400 text-lg"></i>
+                        <h3 class="font-display font-bold text-lg text-white">Reguli Whist Românesc</h3>
+                    </div>
+
+                    <div class="space-y-2">
+                        <h4 class="font-display font-bold text-amber-400 text-sm uppercase tracking-wider">1. Pregătirea Pachetului (8 cărți / jucător)</h4>
+                        <p class="text-xs sm:text-sm text-slate-300">
+                            Se păstrează câte 8 cărți pentru fiecare jucător, de la cele mai mari în jos:
+                        </p>
+                        <ul class="grid grid-cols-3 gap-2 text-center text-xs pt-1">
+                            <li class="bg-emerald-950/80 border border-emerald-800/60 rounded-lg p-2">
+                                <strong class="block text-white">4 Jucători</strong>
+                                <span class="text-emerald-300">32 cărți (7 → As)</span>
+                            </li>
+                            <li class="bg-emerald-950/80 border border-emerald-800/60 rounded-lg p-2">
+                                <strong class="block text-white">5 Jucători</strong>
+                                <span class="text-emerald-300">40 cărți (5 → As)</span>
+                            </li>
+                            <li class="bg-emerald-950/80 border border-emerald-800/60 rounded-lg p-2">
+                                <strong class="block text-white">6 Jucători</strong>
+                                <span class="text-emerald-300">48 cărți (3 → As)</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <h4 class="font-display font-bold text-amber-400 text-sm uppercase tracking-wider">2. Regula Licitației (Ultimul Jucător)</h4>
+                        <p class="text-xs sm:text-sm text-slate-300">
+                            Fiecare jucător estimează câte levate (mâini) va câștiga. <strong>Suma totală a mâinilor licitate NU are voie să fie egală cu numărul de cărți din acea rundă.</strong> Ultimul jucător la licitație este restricționat automat de aplicație astfel încât cel puțin un jucător să nu-și poată realiza planul.
+                        </p>
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <h4 class="font-display font-bold text-amber-400 text-sm uppercase tracking-wider">3. Desfășurarea Mâinii & ATU</h4>
+                        <p class="text-xs sm:text-sm text-slate-300">
+                            Se întoarce o carte pentru a stabili <strong>ATU-ul</strong> (excepție fac rundele de <strong>8 cărți</strong>, unde toate cărțile sunt împărțite și se joacă <em>Fără ATU</em>). Jucătorii sunt obligați să dea la culoare; dacă nu au culoarea cerută, sunt obligați să taie cu ATU.
+                        </p>
+                    </div>
+
+                    <div class="space-y-2">
+                        <h4 class="font-display font-bold text-amber-400 text-sm uppercase tracking-wider">4. Calculul Punctajului</h4>
+                        <div class="grid sm:grid-cols-2 gap-2.5 text-xs">
+                            <div class="bg-emerald-900/40 border border-emerald-600/40 rounded-xl p-3">
+                                <div class="font-bold text-emerald-300 mb-1 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-circle-check"></i> Predicție Corectă
+                                </div>
+                                <p>Primești <strong>5 puncte bonus + 1 punct pentru fiecare mână făcută</strong>.</p>
+                                <p class="text-emerald-200/80 mt-1 italic">Exemplu: Licitezi 0, faci 0 = +5 pct. Licitezi 3, faci 3 = +8 pct.</p>
+                            </div>
+                            <div class="bg-rose-950/40 border border-rose-700/40 rounded-xl p-3">
+                                <div class="font-bold text-rose-300 mb-1 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-circle-xmark"></i> Predicție Greșită
+                                </div>
+                                <p>Pierzi câte <strong>1 punct pentru fiecare mână în plus sau în minus</strong> față de cât ai licitat.</p>
+                                <p class="text-rose-200/80 mt-1 italic">Exemplu: Licitezi 2, faci 4 (sau 0) = -2 pct.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <h4 class="font-display font-bold text-amber-400 text-sm uppercase tracking-wider">5. Bonus Serie (5 la rând) & Câștig la 0</h4>
+                        <ul class="list-disc list-inside text-xs sm:text-sm text-slate-300 space-y-1">
+                            <li><strong>Serie de 5 (2–8 cărți):</strong> 5 predicții corecte la rând (excluzând rundele de 1 carte) aduc <strong>+10 puncte</strong>. 5 greșite la rând scad <strong>-10 puncte</strong>.</li>
+                            <li><strong>Câștig la 0 (1-8-1):</strong> Dacă la finalul jocului un jucător are exact <strong>0 puncte</strong> (după ce a avut cel puțin o dată punctaj pozitiv), este declarat câștigător special!</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+        </section>
     </main>
 
-    <footer class="text-center py-3 text-[10px] text-emerald-500 border-t border-emerald-900 mt-4">
-        Whist App • PWA Activat • Salvat Local
-    </footer>
+    <!-- Bottom Navigation Bar (Visible only during active game) -->
+    <nav id="bottomNav" class="hidden fixed bottom-0 inset-x-0 z-30 glass-panel border-t border-emerald-800/80 px-3 py-1.5">
+        <div class="max-w-xl mx-auto grid grid-cols-3 gap-2">
+            <button type="button" onclick="switchTab('round')" id="navBtnRound" class="py-2 rounded-xl flex flex-col items-center justify-center gap-0.5 transition">
+                <i class="fa-solid fa-hand-sparkles text-base"></i>
+                <span class="text-[11px] font-bold">Runda Curentă</span>
+            </button>
+            <button type="button" onclick="switchTab('scoreboard')" id="navBtnScoreboard" class="py-2 rounded-xl flex flex-col items-center justify-center gap-0.5 transition relative">
+                <i class="fa-solid fa-table-list text-base"></i>
+                <span class="text-[11px] font-bold">Clasament & Tabel</span>
+            </button>
+            <button type="button" onclick="switchTab('rules')" id="navBtnRules" class="py-2 rounded-xl flex flex-col items-center justify-center gap-0.5 transition">
+                <i class="fa-solid fa-circle-question text-base"></i>
+                <span class="text-[11px] font-bold">Reguli</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ==================== MODAL: CONFIRM NEW GAME / RESET ==================== -->
+    <div id="resetModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="glass-panel rounded-2xl max-w-sm w-full p-5 border border-rose-500/30 shadow-2xl space-y-4">
+            <div class="flex items-center gap-3 text-rose-400">
+                <div class="w-10 h-10 rounded-full bg-rose-500/20 flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-triangle-exclamation text-lg"></i>
+                </div>
+                <div>
+                    <h3 class="font-display font-bold text-lg text-white">Începi un joc nou?</h3>
+                    <p class="text-xs text-slate-300">Scorurile din jocul curent vor fi șterse.</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2.5 pt-2">
+                <button type="button" onclick="closeResetModal()" class="py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-sm transition">
+                    Anulează
+                </button>
+                <button type="button" onclick="confirmResetToSetup()" class="py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-sm transition">
+                    Da, Joc Nou
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL: CONFIRM UNDO LAST ROUND ==================== -->
+    <div id="undoModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="glass-panel rounded-2xl max-w-sm w-full p-5 border border-amber-500/30 shadow-2xl space-y-4">
+            <div class="flex items-center gap-3 text-amber-400">
+                <div class="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-rotate-left text-lg"></i>
+                </div>
+                <div>
+                    <h3 class="font-display font-bold text-lg text-white">Anulezi ultima rundă?</h3>
+                    <p class="text-xs text-slate-300">Te vei întoarce la runda anterioară pentru a corecta mâinile făcute sau licitate.</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2.5 pt-2">
+                <button type="button" onclick="closeUndoModal()" class="py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-sm transition">
+                    Renunță
+                </button>
+                <button type="button" onclick="confirmUndoLastRound()" class="py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm transition">
+                    Anulează Runda
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL: GAME OVER PODIUM ==================== -->
+    <div id="gameOverModal" class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
+        <div class="glass-panel rounded-2xl max-w-md w-full p-5 border border-amber-400/40 shadow-2xl space-y-5 my-auto">
+            <div class="text-center space-y-1">
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-300 to-amber-600 text-slate-950 mx-auto flex items-center justify-center text-2xl shadow-lg shadow-amber-500/30">
+                    <i class="fa-solid fa-crown"></i>
+                </div>
+                <h2 class="font-display font-extrabold text-2xl text-white pt-1">Joc Finalizat!</h2>
+                <p id="gameOverSubtitle" class="text-xs text-emerald-300">Toate rundele au fost jucate.</p>
+            </div>
+
+            <div id="zeroWinAlert" class="hidden bg-amber-500/20 border border-amber-400 rounded-xl p-3 text-xs text-amber-200 text-center">
+                <!-- Populated if someone triggers the special Win at 0 rule -->
+            </div>
+
+            <div id="finalPodiumList" class="space-y-2.5">
+                <!-- Populated dynamically -->
+            </div>
+
+            <div class="grid grid-cols-2 gap-2.5 pt-2">
+                <button type="button" onclick="closeGameOverModalAndViewTable()" class="py-3 rounded-xl bg-emerald-800 hover:bg-emerald-700 text-white font-semibold text-xs sm:text-sm transition flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-table"></i>
+                    <span>Vezi Tabelul</span>
+                </button>
+                <button type="button" onclick="confirmResetToSetup()" class="py-3 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-display font-bold text-xs sm:text-sm transition flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-rotate"></i>
+                    <span>Joc Nou</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toastNotification" class="fixed top-16 left-1/2 -translate-x-1/2 z-50 pointer-events-none opacity-0 transition-all duration-300 transform -translate-y-2">
+        <div id="toastInner" class="px-4 py-2.5 rounded-xl shadow-xl font-medium text-xs sm:text-sm flex items-center gap-2 border">
+            <span id="toastText"></span>
+        </div>
+    </div>
 
     <script>
-        let players = JSON.parse(localStorage.getItem('whist_players')) || [];
-        let gameConfig = localStorage.getItem('whist_config') || '1-8-1';
-        let matchStarted = localStorage.getItem('whist_started') === 'true';
+        // ==================== STATE MANAGEMENT ====================
+        const STORAGE_KEY = 'whist_romanesc_state_v1';
 
-        function renderSetup() {
-            const list = document.getElementById('playersList');
-            list.innerHTML = '';
-            if(players.length === 0) {
-                list.innerHTML = `<span class="text-xs text-emerald-600 italic">Niciun jucător adăugat.</span>`;
-                return;
+        let setupConfig = {
+            playerCount: 4,
+            variant: '1-8-1',
+            streakBonus: true,
+            playerNames: ['Jucător 1', 'Jucător 2', 'Jucător 3', 'Jucător 4', 'Jucător 5', 'Jucător 6']
+        };
+
+        let gameState = null;
+        /*
+        gameState structure:
+        {
+            isActive: true,
+            variant: '1-8-1' | '8-1-8',
+            streakBonusEnabled: true,
+            players: ['Ana', 'Bogdan', 'Cristi', 'Dan'],
+            rounds: [
+                {
+                    roundIndex: 0,
+                    cards: 1,
+                    firstBidderIndex: 0,
+                    bids: [null, null, null, null], // indexed by playerIndex
+                    made: [null, null, null, null], // indexed by playerIndex
+                    deltas: [0, 0, 0, 0],           // score change in this round
+                    bonuses: [0, 0, 0, 0],          // +10 or -10 if 5-streak triggered on this round
+                    totals: [0, 0, 0, 0],           // cumulative score after this round
+                    completed: false
+                }
+            ],
+            currentRoundIndex: 0,
+            currentPhase: 'BIDDING' | 'TRICKS' | 'FINISHED',
+            activeTab: 'round' | 'scoreboard' | 'rules'
+        }
+        */
+
+        // ==================== INITIALIZATION ====================
+        window.addEventListener('DOMContentLoaded', () => {
+            loadSavedState();
+        });
+
+        function loadSavedState() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    if (parsed && parsed.isActive && Array.isArray(parsed.players) && Array.isArray(parsed.rounds)) {
+                        gameState = parsed;
+                        // Keep setup names synced with last used players for convenience
+                        gameState.players.forEach((name, idx) => {
+                            setupConfig.playerNames[idx] = name;
+                        });
+                        setupConfig.playerCount = gameState.players.length;
+                        setupConfig.variant = gameState.variant || '1-8-1';
+                        setupConfig.streakBonus = gameState.streakBonusEnabled !== false;
+
+                        renderApp();
+                        return;
+                    }
+                }
+            } catch (e) {
+                console.error('Eroare la citirea stării salvate:', e);
             }
-            players.forEach((p, index) => {
-                const tag = document.createElement('div');
-                tag.className = "flex items-center gap-1.5 px-3 py-1.5 bg-emerald-950 border border-emerald-700 rounded-xl text-xs text-emerald-200 shadow-sm";
-                tag.innerHTML = `<span>${p}</span> <button onclick="removePlayer(${index})" class="text-rose-400 hover:text-rose-300 font-bold ml-1">×</button>`;
-                list.appendChild(tag);
+            renderSetupScreen();
+        }
+
+        function saveState() {
+            try {
+                if (gameState) {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(gameState));
+                } else {
+                    localStorage.removeItem(STORAGE_KEY);
+                }
+            } catch (e) {
+                console.error('Eroare la salvarea stării:', e);
+            }
+        }
+
+        // ==================== SETUP SCREEN LOGIC ====================
+        function setSetupPlayerCount(count) {
+            captureCurrentNameInputs();
+            setupConfig.playerCount = count;
+            renderSetupScreen();
+        }
+
+        function setSetupVariant(variant) {
+            captureCurrentNameInputs();
+            setupConfig.variant = variant;
+            renderSetupScreen();
+        }
+
+        function captureCurrentNameInputs() {
+            const inputs = document.querySelectorAll('.player-name-input');
+            inputs.forEach(input => {
+                const idx = parseInt(input.getAttribute('data-idx'), 10);
+                if (!isNaN(idx) && input.value.trim() !== '') {
+                    setupConfig.playerNames[idx] = input.value.trim();
+                }
             });
         }
 
-        window.addPlayer = function() {
-            const input = document.getElementById('playerNameInput');
-            const name = input.value.trim();
-            if(name && !players.includes(name)) {
-                players.push(name);
-                input.value = '';
-                localStorage.setItem('whist_players', JSON.stringify(players));
-                renderSetup();
+        function moveSetupPlayer(index, direction) {
+            captureCurrentNameInputs();
+            const target = index + direction;
+            if (target < 0 || target >= setupConfig.playerCount) return;
+            const temp = setupConfig.playerNames[index];
+            setupConfig.playerNames[index] = setupConfig.playerNames[target];
+            setupConfig.playerNames[target] = temp;
+            renderSetupScreen();
+        }
+
+        function renderSetupScreen() {
+            document.getElementById('setupScreen').classList.remove('hidden');
+            document.getElementById('gameScreen').classList.add('hidden');
+            document.getElementById('bottomNav').classList.add('hidden');
+            document.getElementById('btnNewGameHeader').classList.add('hidden');
+            document.getElementById('btnUndoHeader').classList.add('hidden');
+            document.getElementById('headerSubtitle').textContent = 'Configurare Joc Nou';
+
+            // Highlight player count buttons
+            document.querySelectorAll('.setup-count-btn').forEach(btn => {
+                const count = parseInt(btn.getAttribute('data-count'), 10);
+                if (count === setupConfig.playerCount) {
+                    btn.className = 'setup-count-btn py-3 rounded-xl font-display font-bold text-base border-2 border-amber-400 bg-amber-500/20 text-white shadow-md shadow-amber-500/10 transition flex flex-col items-center justify-center';
+                } else {
+                    btn.className = 'setup-count-btn py-3 rounded-xl font-display font-bold text-base border border-emerald-800/80 bg-emerald-950/50 text-emerald-200/70 hover:bg-emerald-900/50 transition flex flex-col items-center justify-center';
+                }
+            });
+
+            // Highlight variant buttons
+            const btn181 = document.getElementById('variantBtn181');
+            const btn818 = document.getElementById('variantBtn818');
+            if (setupConfig.variant === '1-8-1') {
+                btn181.className = 'py-3 px-3 rounded-xl font-display font-bold text-sm border-2 border-amber-400 bg-amber-500/20 text-white shadow-md transition flex flex-col items-center text-center';
+                btn818.className = 'py-3 px-3 rounded-xl font-display font-bold text-sm border border-emerald-800/80 bg-emerald-950/50 text-emerald-200/70 hover:bg-emerald-900/50 transition flex flex-col items-center text-center';
+            } else {
+                btn818.className = 'py-3 px-3 rounded-xl font-display font-bold text-sm border-2 border-amber-400 bg-amber-500/20 text-white shadow-md transition flex flex-col items-center text-center';
+                btn181.className = 'py-3 px-3 rounded-xl font-display font-bold text-sm border border-emerald-800/80 bg-emerald-950/50 text-emerald-200/70 hover:bg-emerald-900/50 transition flex flex-col items-center text-center';
+            }
+
+            document.getElementById('streakBonusToggle').checked = setupConfig.streakBonus;
+
+            // Render Player Name Inputs
+            const container = document.getElementById('playerInputsContainer');
+            container.innerHTML = '';
+
+            for (let i = 0; i < setupConfig.playerCount; i++) {
+                const isFirst = i === 0;
+                const isLast = i === setupConfig.playerCount - 1;
+                const row = document.createElement('div');
+                row.className = 'flex items-center gap-2';
+                row.innerHTML = `
+                    <div class="w-8 h-11 rounded-xl ${isFirst ? 'bg-amber-500 text-slate-950 font-extrabold' : 'bg-emerald-900/80 text-emerald-200 font-bold'} flex items-center justify-center text-sm shrink-0 border border-emerald-700/50">
+                        ${i + 1}
+                    </div>
+                    <div class="relative flex-1">
+                        <input
+                            type="text"
+                            data-idx="${i}"
+                            value="${escapeHtml(setupConfig.playerNames[i] || `Jucător ${i + 1}`)}"
+                            placeholder="Nume Jucător ${i + 1}"
+                            maxlength="18"
+                            onfocus="this.select()"
+                            class="player-name-input w-full bg-emerald-950/90 border border-emerald-700/70 focus:border-amber-400 rounded-xl px-3.5 py-2.5 text-sm font-medium text-white placeholder-emerald-500 focus:outline-none transition"
+                        />
+                        ${isFirst ? '<span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 pointer-events-none">Primul la licitație</span>' : ''}
+                    </div>
+                    <div class="flex flex-col gap-1 shrink-0">
+                        <button type="button" onclick="moveSetupPlayer(${i}, -1)" ${isFirst ? 'disabled' : ''} class="w-7 h-5 rounded bg-emerald-900/80 hover:bg-emerald-800 disabled:opacity-30 text-emerald-200 text-[10px] flex items-center justify-center border border-emerald-700/50">
+                            <i class="fa-solid fa-chevron-up"></i>
+                        </button>
+                        <button type="button" onclick="moveSetupPlayer(${i}, 1)" ${isLast ? 'disabled' : ''} class="w-7 h-5 rounded bg-emerald-900/80 hover:bg-emerald-800 disabled:opacity-30 text-emerald-200 text-[10px] flex items-center justify-center border border-emerald-700/50">
+                            <i class="fa-solid fa-chevron-down"></i>
+                        </button>
+                    </div>
+                `;
+                container.appendChild(row);
             }
         }
 
-        window.removePlayer = function(index) {
-            players.splice(index, 1);
-            localStorage.setItem('whist_players', JSON.stringify(players));
-            renderSetup();
+        // ==================== ROUND GENERATION LOGIC ====================
+        function generateCardSequence(numPlayers, variant) {
+            const seq = [];
+            if (variant === '8-1-8') {
+                // N rounds of 8, then 7..2, then N rounds of 1, then 2..7, then N rounds of 8
+                for (let i = 0; i < numPlayers; i++) seq.push(8);
+                for (let c = 7; c >= 2; c--) seq.push(c);
+                for (let i = 0; i < numPlayers; i++) seq.push(1);
+                for (let c = 2; c <= 7; c++) seq.push(c);
+                for (let i = 0; i < numPlayers; i++) seq.push(8);
+            } else {
+                // Classic 1-8-1: N rounds of 1, then 2..7, then N rounds of 8, then 7..2, then N rounds of 1
+                for (let i = 0; i < numPlayers; i++) seq.push(1);
+                for (let c = 2; c <= 7; c++) seq.push(c);
+                for (let i = 0; i < numPlayers; i++) seq.push(8);
+                for (let c = 7; c >= 2; c--) seq.push(c);
+                for (let i = 0; i < numPlayers; i++) seq.push(1);
+            }
+            return seq;
         }
 
-        window.startMatch = function() {
-            if(players.length < 3) {
-                alert("Ai nevoie de cel puțin 3 jucători pentru a juca Whist!");
+        function startNewGame() {
+            captureCurrentNameInputs();
+            setupConfig.streakBonus = document.getElementById('streakBonusToggle').checked;
+
+            const n = setupConfig.playerCount;
+            const players = [];
+            for (let i = 0; i < n; i++) {
+                const rawName = (setupConfig.playerNames[i] || '').trim();
+                players.push(rawName || `Jucător ${i + 1}`);
+            }
+
+            const cardSeq = generateCardSequence(n, setupConfig.variant);
+            const rounds = cardSeq.map((cards, idx) => ({
+                roundIndex: idx,
+                cards: cards,
+                firstBidderIndex: idx % n,
+                bids: new Array(n).fill(null),
+                made: new Array(n).fill(null),
+                deltas: new Array(n).fill(0),
+                bonuses: new Array(n).fill(0),
+                totals: new Array(n).fill(0),
+                completed: false
+            }));
+
+            gameState = {
+                isActive: true,
+                variant: setupConfig.variant,
+                streakBonusEnabled: setupConfig.streakBonus,
+                players: players,
+                rounds: rounds,
+                currentRoundIndex: 0,
+                currentPhase: 'BIDDING',
+                activeTab: 'round'
+            };
+
+            saveState();
+            renderApp();
+            showToast('Jocul a început! Succes la licitație!', 'success');
+        }
+
+        // ==================== BIDDING ORDER & RESTRICTION HELPERS ====================
+        function getBiddingOrder(round) {
+            const n = gameState.players.length;
+            const order = [];
+            for (let offset = 0; offset < n; offset++) {
+                order.push((round.firstBidderIndex + offset) % n);
+            }
+            return order;
+        }
+
+        function getForbiddenBidForLastPlayer(round) {
+            const order = getBiddingOrder(round);
+            const lastPlayerIdx = order[order.length - 1];
+            let sumOthers = 0;
+            for (let i = 0; i < order.length - 1; i++) {
+                const pIdx = order[i];
+                if (round.bids[pIdx] === null) {
+                    return null; // Not all preceding players have bid yet
+                }
+                sumOthers += round.bids[pIdx];
+            }
+            const forbidden = round.cards - sumOthers;
+            if (forbidden >= 0 && forbidden <= round.cards) {
+                return forbidden;
+            }
+            return -1; // Sum is already > cards, so no bid between 0..cards is forbidden
+        }
+
+        // ==================== SCORING & STREAK RECALCULATION ====================
+        function recalculateAllScores() {
+            const n = gameState.players.length;
+            const runningTotals = new Array(n).fill(0);
+            const posStreak = new Array(n).fill(0);
+            const negStreak = new Array(n).fill(0);
+
+            gameState.rounds.forEach(r => {
+                if (!r.completed) {
+                    r.deltas = new Array(n).fill(0);
+                    r.bonuses = new Array(n).fill(0);
+                    r.totals = [...runningTotals];
+                    return;
+                }
+
+                for (let p = 0; p < n; p++) {
+                    const bid = r.bids[p];
+                    const made = r.made[p];
+                    let baseDelta = 0;
+                    const isCorrect = (bid === made);
+
+                    if (isCorrect) {
+                        baseDelta = 5 + made;
+                    } else {
+                        baseDelta = -Math.abs(bid - made);
+                    }
+
+                    let bonus = 0;
+                    // Streak rule applies only to rounds with > 1 card (2-8 cards)
+                    if (gameState.streakBonusEnabled && r.cards > 1) {
+                        if (isCorrect) {
+                            posStreak[p] += 1;
+                            negStreak[p] = 0;
+                            if (posStreak[p] === 5) {
+                                bonus = 10;
+                                posStreak[p] = 0;
+                            }
+                        } else {
+                            negStreak[p] += 1;
+                            posStreak[p] = 0;
+                            if (negStreak[p] === 5) {
+                                bonus = -10;
+                                negStreak[p] = 0;
+                            }
+                        }
+                    }
+
+                    r.deltas[p] = baseDelta + bonus;
+                    r.bonuses[p] = bonus;
+                    runningTotals[p] += r.deltas[p];
+                    r.totals[p] = runningTotals[p];
+                }
+            });
+        }
+
+        // Helper to get current active streak for each player up to latest completed round
+        function getCurrentPlayerStreaks() {
+            const n = gameState.players.length;
+            const posStreak = new Array(n).fill(0);
+            const negStreak = new Array(n).fill(0);
+
+            gameState.rounds.forEach(r => {
+                if (!r.completed || r.cards === 1) return;
+                for (let p = 0; p < n; p++) {
+                    if (r.bids[p] === r.made[p]) {
+                        posStreak[p] += 1;
+                        negStreak[p] = 0;
+                        if (posStreak[p] === 5) posStreak[p] = 0;
+                    } else {
+                        negStreak[p] += 1;
+                        posStreak[p] = 0;
+                        if (negStreak[p] === 5) negStreak[p] = 0;
+                    }
+                }
+            });
+
+            return { posStreak, negStreak };
+        }
+
+        // ==================== ROUND INTERACTION HANDLERS ====================
+        function selectPlayerBid(playerIndex, bidValue) {
+            const round = gameState.rounds[gameState.currentRoundIndex];
+            if (!round || gameState.currentPhase !== 'BIDDING') return;
+
+            const order = getBiddingOrder(round);
+            const lastPlayerIdx = order[order.length - 1];
+
+            // Set bid
+            round.bids[playerIndex] = bidValue;
+
+            // If an earlier player changed their bid, check if last player's existing bid became forbidden
+            if (playerIndex !== lastPlayerIdx && round.bids[lastPlayerIdx] !== null) {
+                const forbidden = getForbiddenBidForLastPlayer(round);
+                if (forbidden !== null && round.bids[lastPlayerIdx] === forbidden) {
+                    round.bids[lastPlayerIdx] = null;
+                    showToast(`Licitația lui ${gameState.players[lastPlayerIdx]} a fost resetată (suma nu poate fi ${round.cards})`, 'warning');
+                }
+            }
+
+            saveState();
+            renderCurrentRoundTab();
+        }
+
+        function confirmBiddingPhase() {
+            const round = gameState.rounds[gameState.currentRoundIndex];
+            if (!round) return;
+
+            // Validate all players have bid
+            if (round.bids.some(b => b === null)) {
+                showToast('Toți jucătorii trebuie să liciteze!', 'error');
                 return;
             }
-            gameConfig = document.getElementById('gameTypeSelect').value;
-            localStorage.setItem('whist_config', gameConfig);
-            localStorage.setItem('whist_started', 'true');
-            
-            document.getElementById('setupSection').classList.add('hidden');
-            document.getElementById('gameSection').classList.remove('hidden');
-            initGameData();
+
+            // Validate sum != cards
+            const totalBids = round.bids.reduce((a, b) => a + b, 0);
+            if (totalBids === round.cards) {
+                showToast(`Suma licitată (${totalBids}) nu are voie să fie egală cu numărul de cărți (${round.cards})!`, 'error');
+                return;
+            }
+
+            gameState.currentPhase = 'TRICKS';
+            saveState();
+            renderCurrentRoundTab();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        function initGameData() {
-            document.getElementById('currentRoundInfo').textContent = `Mod selectat: ${gameConfig}`;
-            const container = document.getElementById('scoreboardContainer');
-            
-            let html = `<table class="w-full text-left text-xs text-emerald-100"><thead><tr class="border-b border-emerald-700 text-emerald-400"><th class="py-2">Jucător</th><th class="py-2 text-right">Puncte Totale</th></tr></thead><tbody>`;
-            players.forEach(p => {
-                html += `<tr class="border-b border-emerald-800/60"><td class="py-2.5 font-semibold">${p}</td><td class="py-2.5 text-right font-mono text-emerald-300 font-bold">0</td></tr>`;
+        function returnToBiddingPhase() {
+            if (gameState.currentPhase !== 'TRICKS') return;
+            gameState.currentPhase = 'BIDDING';
+            saveState();
+            renderCurrentRoundTab();
+        }
+
+        function selectPlayerMade(playerIndex, madeValue) {
+            const round = gameState.rounds[gameState.currentRoundIndex];
+            if (!round || gameState.currentPhase !== 'TRICKS') return;
+
+            round.made[playerIndex] = madeValue;
+
+            // Helpful auto-fill: if N-1 players have entered tricks and remaining tricks >= 0, we don't force it,
+            // but we immediately update the UI so the last player can tap or use quick-fill.
+            saveState();
+            renderCurrentRoundTab();
+        }
+
+        function autoFillRemainingTricks(playerIndex, value) {
+            selectPlayerMade(playerIndex, value);
+        }
+
+        function completeCurrentRound() {
+            const round = gameState.rounds[gameState.currentRoundIndex];
+            if (!round) return;
+
+            if (round.made.some(m => m === null)) {
+                showToast('Introdu mâinile făcute pentru toți jucătorii!', 'error');
+                return;
+            }
+
+            const totalMade = round.made.reduce((a, b) => a + b, 0);
+            if (totalMade !== round.cards) {
+                showToast(`Totalul mâinilor făcute (${totalMade}) trebuie să fie exact ${round.cards}!`, 'error');
+                return;
+            }
+
+            round.completed = true;
+            recalculateAllScores();
+
+            // Check if any player got a +/-10 streak bonus this round to announce it
+            const bonusMsgs = [];
+            round.bonuses.forEach((b, idx) => {
+                if (b === 10) bonusMsgs.push(`${gameState.players[idx]} (+10p serie 5!)`);
+                if (b === -10) bonusMsgs.push(`${gameState.players[idx]} (-10p serie 5)`);
             });
-            html += `</tbody></table>`;
-            container.innerHTML = html;
-        }
 
-        window.resetMatch = function() {
-            if(confirm("Sigur vrei să resetezi meciul? Se vor șterge toți jucătorii și scorurile.")) {
-                localStorage.clear();
-                players = [];
-                document.getElementById('gameSection').classList.add('hidden');
-                document.getElementById('setupSection').classList.remove('hidden');
-                renderSetup();
+            if (gameState.currentRoundIndex < gameState.rounds.length - 1) {
+                gameState.currentRoundIndex += 1;
+                gameState.currentPhase = 'BIDDING';
+                saveState();
+                renderApp();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+
+                if (bonusMsgs.length > 0) {
+                    showToast(`Runda salvată! Bonus: ${bonusMsgs.join(', ')}`, 'success');
+                } else {
+                    showToast('Runda a fost salvată! Trecem la runda următoare.', 'success');
+                }
+            } else {
+                gameState.currentPhase = 'FINISHED';
+                saveState();
+                renderApp();
+                openGameOverModal();
             }
         }
 
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js').catch(err => console.log('SW error:', err));
+        // ==================== UNDO LAST ROUND ====================
+        function openUndoModal() {
+            if (!gameState || gameState.currentRoundIndex === 0 && !gameState.rounds[0].completed) return;
+            document.getElementById('undoModal').classList.remove('hidden');
         }
 
-        renderSetup();
-        if(matchStarted && players.length >= 3) {
-            document.getElementById('setupSection').classList.add('hidden');
-            document.getElementById('gameSection').classList.remove('hidden');
-            document.getElementById('gameTypeSelect').value = gameConfig;
-            initGameData();
+        function closeUndoModal() {
+            document.getElementById('undoModal').classList.add('hidden');
+        }
+
+        function confirmUndoLastRound() {
+            closeUndoModal();
+            if (!gameState) return;
+
+            let targetIdx = gameState.currentRoundIndex;
+            if (gameState.currentPhase === 'FINISHED' && gameState.rounds[targetIdx].completed) {
+                // Undo the final round
+                gameState.rounds[targetIdx].completed = false;
+                gameState.currentPhase = 'TRICKS';
+            } else if (targetIdx > 0) {
+                // Clear any partial inputs in the current unplayed round
+                const curr = gameState.rounds[targetIdx];
+                curr.bids.fill(null);
+                curr.made.fill(null);
+
+                targetIdx -= 1;
+                gameState.currentRoundIndex = targetIdx;
+                gameState.rounds[targetIdx].completed = false;
+                gameState.currentPhase = 'TRICKS';
+            }
+
+            recalculateAllScores();
+            gameState.activeTab = 'round';
+            saveState();
+            renderApp();
+            showToast(`Te-ai întors la Runda ${targetIdx + 1}.`, 'warning');
+        }
+
+        // ==================== UI RENDERING ====================
+        function renderApp() {
+            if (!gameState || !gameState.isActive) {
+                renderSetupScreen();
+                return;
+            }
+
+            document.getElementById('setupScreen').classList.add('hidden');
+            document.getElementById('gameScreen').classList.remove('hidden');
+            document.getElementById('bottomNav').classList.remove('hidden');
+            document.getElementById('btnNewGameHeader').classList.remove('hidden');
+
+            // Show Undo button if at least 1 round is completed
+            const hasCompletedRounds = gameState.rounds.some(r => r.completed);
+            const btnUndo = document.getElementById('btnUndoHeader');
+            if (hasCompletedRounds) {
+                btnUndo.classList.remove('hidden');
+            } else {
+                btnUndo.classList.add('hidden');
+            }
+
+            const completedCount = gameState.rounds.filter(r => r.completed).length;
+            document.getElementById('headerSubtitle').textContent =
+                `Varianta ${gameState.variant} • ${gameState.players.length} Jucători • ${completedCount}/${gameState.rounds.length} runde`;
+
+            switchTab(gameState.activeTab || 'round', false);
+        }
+
+        function switchTab(tabName, shouldSave = true) {
+            if (!gameState) return;
+            gameState.activeTab = tabName;
+            if (shouldSave) saveState();
+
+            const tabRound = document.getElementById('tabCurrentRound');
+            const tabScoreboard = document.getElementById('tabScoreboard');
+            const tabRules = document.getElementById('tabRules');
+
+            const navRound = document.getElementById('navBtnRound');
+            const navScoreboard = document.getElementById('navBtnScoreboard');
+            const navRules = document.getElementById('navBtnRules');
+
+            tabRound.classList.add('hidden');
+            tabScoreboard.classList.add('hidden');
+            tabRules.classList.add('hidden');
+
+            const inactiveNavClass = 'py-2 rounded-xl flex flex-col items-center justify-center gap-0.5 text-emerald-300/70 hover:text-white transition';
+            const activeNavClass = 'py-2 rounded-xl flex flex-col items-center justify-center gap-0.5 bg-amber-500/20 text-amber-300 border border-amber-500/30 transition';
+
+            navRound.className = inactiveNavClass;
+            navScoreboard.className = inactiveNavClass;
+            navRules.className = inactiveNavClass;
+
+            if (tabName === 'round') {
+                tabRound.classList.remove('hidden');
+                navRound.className = activeNavClass;
+                renderCurrentRoundTab();
+            } else if (tabName === 'scoreboard') {
+                tabScoreboard.classList.remove('hidden');
+                navScoreboard.className = activeNavClass;
+                renderScoreboardTab();
+            } else if (tabName === 'rules') {
+                tabRules.classList.remove('hidden');
+                navRules.className = activeNavClass;
+            }
+        }
+
+        function renderCurrentRoundTab() {
+            const round = gameState.rounds[gameState.currentRoundIndex];
+            const totalRounds = gameState.rounds.length;
+            const order = getBiddingOrder(round);
+            const firstPlayerName = gameState.players[order[0]];
+            const lastPlayerName = gameState.players[order[order.length - 1]];
+
+            // Update Round Header
+            document.getElementById('roundBadgeText').textContent = `Runda ${round.roundIndex + 1} / ${totalRounds}`;
+            const trumpBadge = document.getElementById('trumpBadge');
+            if (round.cards === 8) {
+                trumpBadge.textContent = '8 Cărți • Fără ATU';
+                trumpBadge.className = 'px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-500/20 text-purple-300 border border-purple-500/40';
+            } else {
+                trumpBadge.textContent = 'Cu ATU';
+                trumpBadge.className = 'px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30';
+            }
+
+            document.getElementById('roundCardsTitle').textContent =
+                round.cards === 1 ? '1 Carte în mână' : `${round.cards} Cărți în mână`;
+            document.getElementById('roundCardBigNum').textContent = round.cards;
+            document.getElementById('firstBidderName').textContent = firstPlayerName;
+            document.getElementById('lastBidderName').textContent = lastPlayerName;
+
+            // Update Phase Stepper
+            const step1 = document.getElementById('phaseStep1');
+            const step2 = document.getElementById('phaseStep2');
+            if (gameState.currentPhase === 'BIDDING') {
+                step1.className = 'py-2 px-3 rounded-lg text-center font-display font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 bg-amber-500 text-slate-950 shadow';
+                step2.className = 'py-2 px-3 rounded-lg text-center font-display font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 text-emerald-300/60';
+            } else {
+                step1.className = 'py-2 px-3 rounded-lg text-center font-display font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 text-emerald-300/80 bg-emerald-900/40 cursor-pointer';
+                step1.onclick = returnToBiddingPhase;
+                step2.className = 'py-2 px-3 rounded-lg text-center font-display font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 bg-emerald-500 text-slate-950 shadow';
+            }
+
+            if (gameState.currentPhase === 'FINISHED') {
+                renderFinishedStateInRoundTab();
+                return;
+            }
+
+            if (gameState.currentPhase === 'BIDDING') {
+                renderBiddingPhase(round, order);
+            } else {
+                renderTricksPhase(round, order);
+            }
+        }
+
+        function renderBiddingPhase(round, order) {
+            const statusBanner = document.getElementById('roundStatusBanner');
+            const container = document.getElementById('playersRoundContainer');
+            const actionArea = document.getElementById('roundActionArea');
+
+            const forbiddenForLast = getForbiddenBidForLastPlayer(round);
+            const allBidsIn = round.bids.every(b => b !== null);
+            const currentBidSum = round.bids.reduce((acc, b) => acc + (b !== null ? b : 0), 0);
+
+            // Status Banner
+            if (!allBidsIn) {
+                const remainingCount = round.bids.filter(b => b === null).length;
+                statusBanner.className = 'rounded-xl p-3.5 border border-emerald-700/60 bg-emerald-950/70 flex items-center justify-between gap-3';
+                statusBanner.innerHTML = `
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold">
+                            <i class="fa-solid fa-gavel"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs font-bold text-white">Faza 1: Licitația în curs</div>
+                            <div class="text-[11px] text-emerald-300/80">Mai trebuie să liciteze ${remainingCount} ${remainingCount === 1 ? 'jucător' : 'jucători'}</div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-xs text-emerald-300">Total licitat:</span>
+                        <div class="font-display font-extrabold text-base text-white">${currentBidSum} / ${round.cards}</div>
+                    </div>
+                `;
+            } else {
+                const diff = currentBidSum - round.cards;
+                const diffLabel = diff > 0
+                    ? `Joc PESTE (+${diff} ${Math.abs(diff) === 1 ? 'mână' : 'mâini'})`
+                    : `Joc SUB (${diff} ${Math.abs(diff) === 1 ? 'mână' : 'mâini'})`;
+                const badgeColor = diff > 0
+                    ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                    : 'bg-sky-500/20 text-sky-300 border-sky-500/40';
+
+                statusBanner.className = 'rounded-xl p-3.5 border border-amber-500/40 bg-emerald-950/90 flex items-center justify-between gap-3';
+                statusBanner.innerHTML = `
+                    <div>
+                        <div class="text-xs font-bold text-emerald-200">Licitație completă!</div>
+                        <div class="text-sm font-display font-bold text-white mt-0.5">Total licitat: ${currentBidSum} din ${round.cards} cărți</div>
+                    </div>
+                    <span class="px-2.5 py-1 rounded-lg text-xs font-bold border ${badgeColor}">
+                        ${diffLabel}
+                    </span>
+                `;
+            }
+
+            // Players Cards in exact bidding order
+            container.innerHTML = '';
+            const prevRoundTotals = getLatestTotalsBeforeCurrent();
+            const streaks = getCurrentPlayerStreaks();
+
+            order.forEach((playerIdx, orderPos) => {
+                const playerName = gameState.players[playerIdx];
+                const isFirst = orderPos === 0;
+                const isLast = orderPos === order.length - 1;
+                const selectedBid = round.bids[playerIdx];
+                const playerScore = prevRoundTotals[playerIdx];
+
+                // Check if all previous players in order have already placed their bid
+                const previousAllBid = order.slice(0, orderPos).every(idx => round.bids[idx] !== null);
+
+                // Streak badge
+                let streakHtml = '';
+                if (gameState.streakBonusEnabled && round.cards > 1) {
+                    if (streaks.posStreak[playerIdx] >= 3) {
+                        streakHtml = `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30" title="Predicții corecte consecutive"><i class="fa-solid fa-fire mr-0.5"></i>${streaks.posStreak[playerIdx]}/5</span>`;
+                    } else if (streaks.negStreak[playerIdx] >= 3) {
+                        streakHtml = `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30" title="Predicții greșite consecutive"><i class="fa-solid fa-bolt mr-0.5"></i>${streaks.negStreak[playerIdx]}/5</span>`;
+                    }
+                }
+
+                // Build number buttons 0 .. round.cards
+                let buttonsHtml = '';
+                for (let num = 0; num <= round.cards; num++) {
+                    const isForbidden = isLast && forbiddenForLast !== null && num === forbiddenForLast;
+                    const isSelected = selectedBid === num;
+
+                    if (isForbidden) {
+                        buttonsHtml += `
+                            <button type="button" disabled
+                                class="num-btn h-11 rounded-xl font-display font-bold text-sm bg-rose-950/50 border border-rose-700/60 text-rose-400/60 relative cursor-not-allowed flex flex-col items-center justify-center"
+                                title="Interzis: suma nu poate fi egală cu numărul de cărți (${round.cards})">
+                                <span class="line-through">${num}</span>
+                                <span class="text-[9px] font-sans uppercase font-bold text-rose-400 leading-none">X</span>
+                            </button>
+                        `;
+                    } else if (isSelected) {
+                        buttonsHtml += `
+                            <button type="button" onclick="selectPlayerBid(${playerIdx}, ${num})"
+                                class="num-btn h-11 rounded-xl font-display font-extrabold text-base bg-amber-400 text-slate-950 border-2 border-white shadow-md shadow-amber-500/20 flex items-center justify-center">
+                                ${num}
+                            </button>
+                        `;
+                    } else {
+                        buttonsHtml += `
+                            <button type="button" onclick="selectPlayerBid(${playerIdx}, ${num})"
+                                class="num-btn h-11 rounded-xl font-display font-bold text-sm bg-emerald-950/90 hover:bg-emerald-800/80 text-slate-200 border border-emerald-700/60 flex items-center justify-center">
+                                ${num}
+                            </button>
+                        `;
+                    }
+                }
+
+                // Determine grid columns based on number of cards (0..1 = 2 cols, up to 0..8 = 5 or 9 cols)
+                const gridColsClass = round.cards <= 4 ? `grid-cols-${round.cards + 1}` : 'grid-cols-5 sm:grid-cols-9';
+
+                // Restriction warning banner for last player
+                let lastBidderWarningHtml = '';
+                if (isLast) {
+                    if (forbiddenForLast !== null && forbiddenForLast >= 0) {
+                        lastBidderWarningHtml = `
+                            <div class="mt-2 px-2.5 py-1.5 rounded-lg bg-rose-950/80 border border-rose-600/50 text-[11px] text-rose-200 flex items-center gap-1.5">
+                                <i class="fa-solid fa-ban text-rose-400"></i>
+                                <span>Nu are voie să liciteze <strong>${forbiddenForLast}</strong> (suma ar fi egală cu ${round.cards} cărți).</span>
+                            </div>
+                        `;
+                    } else if (forbiddenForLast === -1) {
+                        lastBidderWarningHtml = `
+                            <div class="mt-2 px-2.5 py-1.5 rounded-lg bg-emerald-950/80 border border-emerald-700/50 text-[11px] text-emerald-300 flex items-center gap-1.5">
+                                <i class="fa-solid fa-check text-emerald-400"></i>
+                                <span>Liber la licitație (suma este deja peste ${round.cards} cărți).</span>
+                            </div>
+                        `;
+                    } else {
+                        lastBidderWarningHtml = `
+                            <div class="mt-2 px-2.5 py-1.5 rounded-lg bg-slate-900/70 border border-slate-700/60 text-[11px] text-slate-300 flex items-center gap-1.5">
+                                <i class="fa-solid fa-hourglass-half text-amber-400"></i>
+                                <span>Ultimul la licitație — restricția se calculează după ce licitează ceilalți.</span>
+                            </div>
+                        `;
+                    }
+                }
+
+                const card = document.createElement('div');
+                card.className = `glass-panel rounded-2xl p-3.5 transition-all ${
+                    selectedBid !== null
+                        ? 'border-amber-500/40'
+                        : previousAllBid
+                        ? 'border-emerald-400/60 ring-1 ring-emerald-400/30'
+                        : 'border-emerald-800/50'
+                }`;
+
+                card.innerHTML = `
+                    <div class="flex items-center justify-between gap-2 mb-2.5">
+                        <div class="flex items-center gap-2 min-w-0">
+                            <span class="w-6 h-6 rounded-full text-xs font-extrabold flex items-center justify-center shrink-0 ${
+                                isFirst ? 'bg-amber-400 text-slate-950' : isLast ? 'bg-rose-500 text-white' : 'bg-emerald-800 text-emerald-200'
+                            }">
+                                ${orderPos + 1}
+                            </span>
+                            <span class="font-display font-bold text-base text-white truncate">${escapeHtml(playerName)}</span>
+                            ${isFirst ? '<span class="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 shrink-0">Primul</span>' : ''}
+                            ${isLast ? '<span class="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30 shrink-0">Ultimul</span>' : ''}
+                            ${streakHtml}
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                            <span class="text-xs text-emerald-300/80">Scor: <strong class="text-white">${playerScore}p</strong></span>
+                            <span class="px-2 py-0.5 rounded-lg text-xs font-bold ${
+                                selectedBid !== null
+                                    ? 'bg-amber-400 text-slate-950'
+                                    : 'bg-slate-800 text-slate-400'
+                            }">
+                                ${selectedBid !== null ? `Licitat: ${selectedBid}` : 'Nelicitat'}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="grid ${gridColsClass} gap-1.5" style="${round.cards <= 4 ? `grid-template-columns: repeat(${round.cards + 1}, minmax(0, 1fr));` : ''}">
+                        ${buttonsHtml}
+                    </div>
+                    ${lastBidderWarningHtml}
+                `;
+
+                container.appendChild(card);
+            });
+
+            // Action Button
+            actionArea.innerHTML = `
+                <button type="button" onclick="confirmBiddingPhase()" ${!allBidsIn ? 'disabled' : ''}
+                    class="w-full py-4 rounded-xl font-display font-extrabold text-base shadow-lg transition flex items-center justify-center gap-2 ${
+                        allBidsIn
+                            ? 'bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 shadow-amber-500/20 active:scale-[0.99]'
+                            : 'bg-slate-800/80 text-slate-500 border border-slate-700/50 cursor-not-allowed'
+                    }">
+                    <i class="fa-solid fa-check-double"></i>
+                    <span>CONFIRMĂ LICITAȚIA & JOACĂ MÂNA</span>
+                </button>
+            `;
+        }
+
+        function renderTricksPhase(round, order) {
+            const statusBanner = document.getElementById('roundStatusBanner');
+            const container = document.getElementById('playersRoundContainer');
+            const actionArea = document.getElementById('roundActionArea');
+
+            const allMadeIn = round.made.every(m => m !== null);
+            const currentMadeSum = round.made.reduce((acc, m) => acc + (m !== null ? m : 0), 0);
+            const isValidTotal = allMadeIn && currentMadeSum === round.cards;
+
+            // Check if exactly 1 player hasn't had their tricks entered yet so we can offer 1-tap auto-fill
+            const nullIndices = [];
+            round.made.forEach((m, idx) => {
+                if (m === null) nullIndices.push(idx);
+            });
+            const remainingTricks = round.cards - currentMadeSum;
+
+            // Status Banner
+            if (isValidTotal) {
+                statusBanner.className = 'rounded-xl p-3.5 border border-emerald-500/50 bg-emerald-900/50 flex items-center justify-between gap-3';
+                statusBanner.innerHTML = `
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-lg bg-emerald-500 text-slate-950 flex items-center justify-center font-bold">
+                            <i class="fa-solid fa-check"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs font-bold text-emerald-200">Mâini introduse corect!</div>
+                            <div class="text-sm font-display font-bold text-white">Total mâini făcute: ${currentMadeSum} / ${round.cards}</div>
+                        </div>
+                    </div>
+                    <span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                        Gata de salvare
+                    </span>
+                `;
+            } else if (allMadeIn && currentMadeSum !== round.cards) {
+                statusBanner.className = 'rounded-xl p-3.5 border border-rose-500/70 bg-rose-950/80 flex items-center justify-between gap-3';
+                statusBanner.innerHTML = `
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-lg bg-rose-500 text-white flex items-center justify-center font-bold shrink-0">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs font-bold text-rose-200">Atenție! Suma nu corespunde</div>
+                            <div class="text-xs text-rose-300">S-au introdus <strong>${currentMadeSum}</strong> mâini, dar runda are <strong>${round.cards}</strong> cărți.</div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                statusBanner.className = 'rounded-xl p-3.5 border border-emerald-700/60 bg-emerald-950/70 flex items-center justify-between gap-3';
+                statusBanner.innerHTML = `
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-300 flex items-center justify-center font-bold">
+                            <i class="fa-solid fa-hand"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs font-bold text-white">Faza 2: Câte mâini a făcut fiecare?</div>
+                            <div class="text-[11px] text-emerald-300/80">Suma totală trebuie să fie exact ${round.cards}</div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-xs text-emerald-300">Mâini:</span>
+                        <div class="font-display font-extrabold text-base text-white">${currentMadeSum} / ${round.cards}</div>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = '';
+
+            order.forEach((playerIdx, orderPos) => {
+                const playerName = gameState.players[playerIdx];
+                const bid = round.bids[playerIdx];
+                const made = round.made[playerIdx];
+
+                // Preview score delta for this player if made is selected
+                let previewBadgeHtml = `<span class="px-2 py-0.5 rounded-lg text-xs font-bold bg-slate-800 text-slate-400">Nesetat</span>`;
+                if (made !== null) {
+                    if (made === bid) {
+                        const pts = 5 + made;
+                        previewBadgeHtml = `<span class="px-2.5 py-0.5 rounded-lg text-xs font-extrabold bg-emerald-500 text-slate-950">+${pts} pct (Exact!)</span>`;
+                    } else {
+                        const diff = -Math.abs(bid - made);
+                        previewBadgeHtml = `<span class="px-2.5 py-0.5 rounded-lg text-xs font-extrabold bg-rose-500 text-white">${diff} pct</span>`;
+                    }
+                } else if (nullIndices.length === 1 && nullIndices[0] === playerIdx && remainingTricks >= 0 && remainingTricks <= round.cards) {
+                    previewBadgeHtml = `
+                        <button type="button" onclick="autoFillRemainingTricks(${playerIdx}, ${remainingTricks})"
+                            class="px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-400/20 hover:bg-amber-400/30 text-amber-300 border border-amber-400/40 transition">
+                            Completează restul (${remainingTricks})
+                        </button>
+                    `;
+                }
+
+                let buttonsHtml = '';
+                for (let num = 0; num <= round.cards; num++) {
+                    const isSelected = made === num;
+                    const isBidTarget = bid === num;
+
+                    if (isSelected) {
+                        const selectedColor = (made === bid)
+                            ? 'bg-emerald-400 text-slate-950 border-2 border-white shadow-md shadow-emerald-500/20'
+                            : 'bg-rose-500 text-white border-2 border-white shadow-md shadow-rose-500/20';
+                        buttonsHtml += `
+                            <button type="button" onclick="selectPlayerMade(${playerIdx}, ${num})"
+                                class="num-btn h-11 rounded-xl font-display font-extrabold text-base ${selectedColor} flex flex-col items-center justify-center relative">
+                                <span>${num}</span>
+                                ${isBidTarget ? '<span class="text-[8px] uppercase font-sans font-extrabold leading-none opacity-80">Licitat</span>' : ''}
+                            </button>
+                        `;
+                    } else {
+                        buttonsHtml += `
+                            <button type="button" onclick="selectPlayerMade(${playerIdx}, ${num})"
+                                class="num-btn h-11 rounded-xl font-display font-bold text-sm ${
+                                    isBidTarget
+                                        ? 'bg-amber-500/15 border-2 border-amber-400/60 text-amber-200'
+                                        : 'bg-emerald-950/90 hover:bg-emerald-800/80 text-slate-200 border border-emerald-700/60'
+                                } flex flex-col items-center justify-center">
+                                <span>${num}</span>
+                                ${isBidTarget ? '<span class="text-[8px] uppercase font-sans font-bold text-amber-300 leading-none">Licitat</span>' : ''}
+                            </button>
+                        `;
+                    }
+                }
+
+                const card = document.createElement('div');
+                card.className = `glass-panel rounded-2xl p-3.5 transition-all ${
+                    made !== null
+                        ? made === bid
+                            ? 'border-emerald-500/50'
+                            : 'border-rose-500/50'
+                        : 'border-emerald-800/50'
+                }`;
+
+                card.innerHTML = `
+                    <div class="flex items-center justify-between gap-2 mb-2.5">
+                        <div class="flex items-center gap-2 min-w-0">
+                            <span class="w-6 h-6 rounded-full text-xs font-bold bg-emerald-800 text-emerald-200 flex items-center justify-center shrink-0">
+                                ${orderPos + 1}
+                            </span>
+                            <span class="font-display font-bold text-base text-white truncate">${escapeHtml(playerName)}</span>
+                            <span class="px-2 py-0.5 rounded-md text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 shrink-0">
+                                A licitat: ${bid}
+                            </span>
+                        </div>
+                        <div class="shrink-0">
+                            ${previewBadgeHtml}
+                        </div>
+                    </div>
+
+                    <div class="grid gap-1.5 ${round.cards <= 4 ? '' : 'grid-cols-5 sm:grid-cols-9'}" style="${round.cards <= 4 ? `grid-template-columns: repeat(${round.cards + 1}, minmax(0, 1fr));` : ''}">
+                        ${buttonsHtml}
+                    </div>
+                `;
+
+                container.appendChild(card);
+            });
+
+            actionArea.innerHTML = `
+                <button type="button" onclick="completeCurrentRound()" ${!isValidTotal ? 'disabled' : ''}
+                    class="w-full py-4 rounded-xl font-display font-extrabold text-base shadow-lg transition flex items-center justify-center gap-2 ${
+                        isValidTotal
+                            ? 'bg-gradient-to-r from-emerald-400 to-emerald-500 hover:from-emerald-300 hover:to-emerald-400 text-slate-950 shadow-emerald-500/20 active:scale-[0.99]'
+                            : 'bg-slate-800/80 text-slate-500 border border-slate-700/50 cursor-not-allowed'
+                    }">
+                    <i class="fa-solid fa-floppy-disk"></i>
+                    <span>SALVEAZĂ RUNDA & CALCULEAZĂ SCORUL</span>
+                </button>
+                <button type="button" onclick="returnToBiddingPhase()"
+                    class="w-full py-2.5 rounded-xl bg-emerald-950/80 hover:bg-emerald-900 text-emerald-200 font-semibold text-xs border border-emerald-800/60 transition flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                    <span>Modifică Licitația din această rundă</span>
+                </button>
+            `;
+        }
+
+        function renderFinishedStateInRoundTab() {
+            const statusBanner = document.getElementById('roundStatusBanner');
+            const container = document.getElementById('playersRoundContainer');
+            const actionArea = document.getElementById('roundActionArea');
+
+            statusBanner.className = 'rounded-xl p-4 border border-amber-400/50 bg-amber-500/15 text-center space-y-2';
+            statusBanner.innerHTML = `
+                <div class="text-amber-300 font-display font-extrabold text-lg">
+                    <i class="fa-solid fa-trophy mr-1.5"></i>Toate cele ${gameState.rounds.length} runde s-au încheiat!
+                </div>
+                <p class="text-xs text-slate-200">Poți consulta tabelul complet sau începe o partidă nouă.</p>
+            `;
+            container.innerHTML = '';
+            actionArea.innerHTML = `
+                <button type="button" onclick="openGameOverModal()" class="w-full py-4 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-display font-extrabold text-base shadow-lg flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-ranking-star"></i>
+                    <span>VEZI PODIUMUL FINAL</span>
+                </button>
+            `;
+        }
+
+        function getLatestTotalsBeforeCurrent() {
+            const n = gameState.players.length;
+            for (let i = gameState.rounds.length - 1; i >= 0; i--) {
+                if (gameState.rounds[i].completed) {
+                    return gameState.rounds[i].totals;
+                }
+            }
+            return new Array(n).fill(0);
+        }
+
+        // ==================== SCOREBOARD & TRADITIONAL TABLE ====================
+        function renderScoreboardTab() {
+            const n = gameState.players.length;
+            const currentTotals = getLatestTotalsBeforeCurrent();
+            const completedRounds = gameState.rounds.filter(r => r.completed);
+            const streaks = getCurrentPlayerStreaks();
+
+            document.getElementById('standingsProgressText').textContent =
+                `${completedRounds.length} / ${gameState.rounds.length} runde jucate`;
+
+            // Compute player stats
+            const stats = gameState.players.map((name, idx) => {
+                let hits = 0;
+                completedRounds.forEach(r => {
+                    if (r.bids[idx] === r.made[idx]) hits++;
+                });
+                const accuracy = completedRounds.length > 0
+                    ? Math.round((hits / completedRounds.length) * 100)
+                    : 0;
+                return {
+                    index: idx,
+                    name,
+                    score: currentTotals[idx],
+                    hits,
+                    accuracy,
+                    posStreak: streaks.posStreak[idx],
+                    negStreak: streaks.negStreak[idx]
+                };
+            });
+
+            // Sort descending by score
+            stats.sort((a, b) => b.score - a.score);
+
+            const standingsList = document.getElementById('liveStandingsList');
+            standingsList.innerHTML = '';
+
+            stats.forEach((p, rankIdx) => {
+                const rankBadge = rankIdx === 0
+                    ? 'bg-amber-400 text-slate-950'
+                    : rankIdx === 1
+                    ? 'bg-slate-300 text-slate-950'
+                    : rankIdx === 2
+                    ? 'bg-amber-700 text-white'
+                    : 'bg-emerald-900 text-emerald-200';
+
+                let streakBadge = '';
+                if (gameState.streakBonusEnabled) {
+                    if (p.posStreak > 0) {
+                        streakBadge = `<span class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-semibold" title="Serie predicții corecte (runde 2-8 cărți)">Serie +: ${p.posStreak}/5</span>`;
+                    } else if (p.negStreak > 0) {
+                        streakBadge = `<span class="text-[10px] px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30 font-semibold" title="Serie predicții greșite (runde 2-8 cărți)">Serie -: ${p.negStreak}/5</span>`;
+                    }
+                }
+
+                const row = document.createElement('div');
+                row.className = 'flex items-center justify-between p-3 rounded-xl bg-emerald-950/80 border border-emerald-800/60';
+                row.innerHTML = `
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div class="w-7 h-7 rounded-lg font-display font-extrabold text-xs flex items-center justify-center shrink-0 ${rankBadge}">
+                            #${rankIdx + 1}
+                        </div>
+                        <div class="min-w-0">
+                            <div class="font-display font-bold text-sm text-white truncate flex items-center gap-2">
+                                <span>${escapeHtml(p.name)}</span>
+                                ${streakBadge}
+                            </div>
+                            <div class="text-[11px] text-emerald-300/70">
+                                Mâini ghicite: ${p.hits}/${completedRounds.length} (${p.accuracy}%)
+                            </div>
+                        </div>
+                    </div>
+                    <div class="font-display font-extrabold text-lg ${p.score >= 0 ? 'text-amber-400' : 'text-rose-400'} shrink-0">
+                        ${p.score} <span class="text-xs font-normal opacity-75">pct</span>
+                    </div>
+                `;
+                standingsList.appendChild(row);
+            });
+
+            // Build Traditional Whist Table
+            const table = document.getElementById('traditionalScoreTable');
+            let theadHtml = `
+                <thead>
+                    <tr class="border-b border-emerald-700/80 text-xs uppercase text-emerald-300 bg-emerald-950">
+                        <th class="py-2.5 px-2 font-display font-bold text-center table-sticky-col border-r border-emerald-800/80 w-14">Cărți</th>
+            `;
+            gameState.players.forEach(name => {
+                theadHtml += `
+                    <th class="py-2.5 px-2.5 font-display font-bold text-center border-r border-emerald-800/40 min-w-[92px]">
+                        <div class="truncate max-w-[90px] mx-auto text-white">${escapeHtml(name)}</div>
+                        <div class="text-[9px] font-sans font-normal text-emerald-400/80 tracking-normal">Lic / Făc | Scor</div>
+                    </th>
+                `;
+            });
+            theadHtml += `</tr></thead>`;
+
+            let tbodyHtml = `<tbody class="divide-y divide-emerald-900/60 text-xs">`;
+            gameState.rounds.forEach((r, idx) => {
+                const isCurrent = idx === gameState.currentRoundIndex && gameState.currentPhase !== 'FINISHED';
+                const rowBg = isCurrent
+                    ? 'bg-amber-500/15'
+                    : r.completed
+                    ? 'bg-emerald-950/30'
+                    : 'opacity-45';
+
+                // Visual separator when card count transitions (e.g. from 1s to 2..7 or 8s)
+                tbodyHtml += `<tr class="${rowBg}">`;
+                tbodyHtml += `
+                    <td class="py-2 px-2 font-display font-extrabold text-center table-sticky-col border-r border-emerald-800/80 ${isCurrent ? 'text-amber-400' : 'text-emerald-200'}">
+                        <span class="inline-flex items-center justify-center w-6 h-6 rounded-md ${r.cards === 8 ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' : 'bg-emerald-900/80'}">${r.cards}</span>
+                    </td>
+                `;
+
+                for (let p = 0; p < n; p++) {
+                    if (r.completed) {
+                        const bid = r.bids[p];
+                        const made = r.made[p];
+                        const total = r.totals[p];
+                        const bonus = r.bonuses[p];
+                        const isHit = bid === made;
+
+                        const pillClass = isHit
+                            ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                            : 'bg-rose-500/20 text-rose-300 border-rose-500/40 line-through decoration-rose-400';
+
+                        const bonusIndicator = bonus !== 0
+                            ? `<span class="ml-1 px-1 rounded text-[9px] font-extrabold ${bonus > 0 ? 'bg-amber-400 text-slate-950' : 'bg-rose-600 text-white'}">${bonus > 0 ? '+10' : '-10'}</span>`
+                            : '';
+
+                        tbodyHtml += `
+                            <td class="py-2 px-2 border-r border-emerald-800/30">
+                                <div class="flex items-center justify-between gap-1">
+                                    <span class="px-1.5 py-0.5 rounded border text-[11px] font-semibold ${pillClass}">
+                                        ${bid} / ${made}
+                                    </span>
+                                    <span class="font-display font-extrabold text-sm text-white">
+                                        ${total}${bonusIndicator}
+                                    </span>
+                                </div>
+                            </td>
+                        `;
+                    } else if (isCurrent && r.bids[p] !== null) {
+                        tbodyHtml += `
+                            <td class="py-2 px-2 border-r border-emerald-800/30 text-center">
+                                <span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 text-[11px] font-bold">
+                                    Lic: ${r.bids[p]}
+                                </span>
+                            </td>
+                        `;
+                    } else {
+                        tbodyHtml += `<td class="py-2 px-2 border-r border-emerald-800/30 text-center text-slate-600">—</td>`;
+                    }
+                }
+                tbodyHtml += `</tr>`;
+            });
+            tbodyHtml += `</tbody>`;
+
+            table.innerHTML = theadHtml + tbodyHtml;
+        }
+
+        // ==================== MODALS & GAME OVER ====================
+        function openResetModal() {
+            document.getElementById('resetModal').classList.remove('hidden');
+        }
+
+        function closeResetModal() {
+            document.getElementById('resetModal').classList.add('hidden');
+        }
+
+        function confirmResetToSetup() {
+            closeResetModal();
+            document.getElementById('gameOverModal').classList.add('hidden');
+            gameState = null;
+            saveState();
+            renderSetupScreen();
+        }
+
+        function openGameOverModal() {
+            if (!gameState) return;
+            const n = gameState.players.length;
+            const finalTotals = getLatestTotalsBeforeCurrent();
+
+            // Check "Câștig la 0" special rule for 1-8-1:
+            // Finish at 0 points after having had a positive score at least once during the game
+            const zeroWinners = [];
+            if (gameState.variant === '1-8-1') {
+                for (let p = 0; p < n; p++) {
+                    if (finalTotals[p] === 0) {
+                        const hadPositive = gameState.rounds.some(r => r.completed && r.totals[p] > 0);
+                        if (hadPositive) {
+                            zeroWinners.push(gameState.players[p]);
+                        }
+                    }
+                }
+            }
+
+            const zeroAlert = document.getElementById('zeroWinAlert');
+            if (zeroWinners.length > 0) {
+                zeroAlert.classList.remove('hidden');
+                zeroAlert.innerHTML = `
+                    <div class="font-display font-bold text-amber-300 text-sm mb-0.5">
+                        <i class="fa-solid fa-star mr-1"></i>Victorie Specială „Câștig la 0”!
+                    </div>
+                    <div>${zeroWinners.map(escapeHtml).join(', ')} a terminat exact cu 0 puncte!</div>
+                `;
+            } else {
+                zeroAlert.classList.add('hidden');
+            }
+
+            const results = gameState.players.map((name, idx) => {
+                let hits = 0;
+                gameState.rounds.forEach(r => {
+                    if (r.completed && r.bids[idx] === r.made[idx]) hits++;
+                });
+                return {
+                    name,
+                    score: finalTotals[idx],
+                    hits,
+                    accuracy: Math.round((hits / gameState.rounds.length) * 100)
+                };
+            }).sort((a, b) => b.score - a.score);
+
+            const podiumList = document.getElementById('finalPodiumList');
+            podiumList.innerHTML = '';
+
+            results.forEach((r, idx) => {
+                const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx + 1}`;
+                const item = document.createElement('div');
+                item.className = `flex items-center justify-between p-3.5 rounded-xl border ${
+                    idx === 0
+                        ? 'bg-amber-500/20 border-amber-400 text-white'
+                        : 'bg-emerald-950/80 border-emerald-800/70 text-slate-200'
+                }`;
+                item.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <span class="text-xl font-display font-bold">${medal}</span>
+                        <div>
+                            <div class="font-display font-bold text-base">${escapeHtml(r.name)}</div>
+                            <div class="text-xs text-emerald-300/80">${r.hits}/${gameState.rounds.length} runde ghicite (${r.accuracy}%)</div>
+                        </div>
+                    </div>
+                    <div class="font-display font-extrabold text-xl text-amber-400">
+                        ${r.score} pct
+                    </div>
+                `;
+                podiumList.appendChild(item);
+            });
+
+            document.getElementById('gameOverModal').classList.remove('hidden');
+        }
+
+        function closeGameOverModalAndViewTable() {
+            document.getElementById('gameOverModal').classList.add('hidden');
+            switchTab('scoreboard');
+        }
+
+        // ==================== UTILITIES ====================
+        let toastTimeout = null;
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toastNotification');
+            const inner = document.getElementById('toastInner');
+            const text = document.getElementById('toastText');
+
+            text.textContent = message;
+
+            if (type === 'error') {
+                inner.className = 'px-4 py-2.5 rounded-xl shadow-xl font-semibold text-xs sm:text-sm flex items-center gap-2 bg-rose-900/95 text-rose-100 border border-rose-500';
+            } else if (type === 'warning') {
+                inner.className = 'px-4 py-2.5 rounded-xl shadow-xl font-semibold text-xs sm:text-sm flex items-center gap-2 bg-amber-900/95 text-amber-100 border border-amber-400';
+            } else {
+                inner.className = 'px-4 py-2.5 rounded-xl shadow-xl font-semibold text-xs sm:text-sm flex items-center gap-2 bg-emerald-800/95 text-white border border-emerald-400';
+            }
+
+            toast.classList.remove('opacity-0', '-translate-y-2');
+            toast.classList.add('opacity-100', 'translate-y-0');
+
+            if (toastTimeout) clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.add('opacity-0', '-translate-y-2');
+                toast.classList.remove('opacity-100', 'translate-y-0');
+            }, 2800);
+        }
+
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
         }
     </script>
 </body>
